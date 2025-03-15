@@ -9,21 +9,47 @@ app.use(cors());
 app.use(express.static('public')); // Serve frontend files
 
 app.post('/generate', (req, res) => {
-    const { name, email, phone } = req.body;
+    const {
+        name, email, phone, linkedin, github,
+        university, location, degree, major, grad_year,
+        job_title, company, company_location, job_dates, responsibility_1, responsibility_2, responsibility_3,
+        project_name, project_dates, project_description, technologies,
+        languages, frameworks, dev_tools
+    } = req.body;
 
-    // Define LaTeX resume template with user input
-    const latexTemplate = `
-\\documentclass{article}
-\\begin{document}
-\\section*{${name}}
-Email: ${email} \\\\
-Phone: ${phone}
-\\end{document}
-    `;
+    // Load LaTeX template and replace placeholders with user data
+    const templatePath = 'template.tex';
+    let templateContent = fs.readFileSync(templatePath, 'utf8');
 
-    // Save template as .tex file
-    fs.writeFileSync('resume.tex', latexTemplate);
-    
+    templateContent = templateContent
+        .replace('{{NAME}}', name)
+        .replace('{{EMAIL}}', email)
+        .replace('{{PHONE}}', phone)
+        .replace('{{LINKEDIN}}', linkedin)
+        .replace('{{GITHUB}}', github)
+        .replace('{{UNIVERSITY}}', university)
+        .replace('{{LOCATION}}', location)
+        .replace('{{DEGREE}}', degree)
+        .replace('{{MAJOR}}', major)
+        .replace('{{GRAD_YEAR}}', grad_year)
+        .replace('{{JOB_TITLE}}', job_title)
+        .replace('{{COMPANY}}', company)
+        .replace('{{COMPANY_LOCATION}}', company_location)
+        .replace('{{JOB_DATES}}', job_dates)
+        .replace('{{RESPONSIBILITY_1}}', responsibility_1)
+        .replace('{{RESPONSIBILITY_2}}', responsibility_2)
+        .replace('{{RESPONSIBILITY_3}}', responsibility_3)
+        .replace('{{PROJECT_NAME}}', project_name)
+        .replace('{{PROJECT_DATES}}', project_dates)
+        .replace('{{PROJECT_DESCRIPTION}}', project_description)
+        .replace('{{TECHNOLOGIES}}', technologies)
+        .replace('{{LANGUAGES}}', languages)
+        .replace('{{FRAMEWORKS}}', frameworks)
+        .replace('{{DEV_TOOLS}}', dev_tools);
+
+    // Save the new LaTeX file
+    fs.writeFileSync('resume.tex', templateContent);
+
     // Compile LaTeX to PDF
     exec('pdflatex resume.tex', (error, stdout, stderr) => {
         if (error) {
@@ -31,7 +57,7 @@ Phone: ${phone}
         }
         res.download('./resume.pdf');
 
-        // Delete the files after sending
+        // Delete temporary files after sending
         setTimeout(() => {
             fs.unlinkSync('resume.tex');
             fs.unlinkSync('resume.pdf');
